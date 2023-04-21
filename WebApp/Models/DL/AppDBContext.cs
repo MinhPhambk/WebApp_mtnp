@@ -26,22 +26,9 @@ namespace WebApp.Models.DL
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<Warehouse> Warehouses { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("Server=DESKTOP-5J47B2A;Database=webapp;User ID=webapp;Password=123456abc;");
-            }
-        }
-
-
-        // Như hàm này là mình override cái method tạo model nè, chỉ cần kế thừa và sử dụng lại các hàm có sẵn thôi
-        // trong các hàm có sẵn thì đã chưứa các SQL query rồi ạ
-        // Ko thể lôi code từ các hàm có sẵn ra được (trong trình độ của em :<) mà chỉ có thể kế thừa lại class
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasAnnotation("Relational:Collation", "Latin1_General_CI_AS");
+            modelBuilder.HasAnnotation("Relational:Collation", "SQL_Latin1_General_CP1_CI_AS");
 
             modelBuilder.Entity<Customer>(entity =>
             {

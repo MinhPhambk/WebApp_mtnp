@@ -1,13 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApp.Models;
 using WebApp.Models.BL.CustomerBL;
+using WebApp.Models.BL.UserLoginBL;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApp.Controllers
 {
@@ -18,6 +21,48 @@ namespace WebApp.Controllers
         public HomeController(ICustomerService customerService)
         {
             _customerService = customerService;
+        }
+
+        public async Task<IActionResult> LoginPage()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> Login(UserLoginDTO model)
+        {
+            if (model.UserName == "sa" && model.Password == "123456")
+            {
+                List<Claim> claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, model.UserName),
+                    new Claim(ClaimTypes.Role, "Admin"),
+                };
+
+                ClaimsIdentity identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                ClaimsPrincipal principal = new ClaimsPrincipal(identity);
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    principal,
+                    new AuthenticationProperties()
+                    {
+                        //IsPersistent = objLoginModel.RememberLogin
+                    }
+                );
+
+                return RedirectToAction("Index");
+            }
+            
+            return RedirectToAction("LoginPage", "Home");
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            return RedirectToAction("");
         }
 
         [HttpGet]
@@ -50,7 +95,6 @@ namespace WebApp.Controllers
             return View();
         }
 
-        // To create a customer
         [HttpPost]
         public async Task<IActionResult> CreateCustomer([Bind("Id,Name,Address,Phone")] CustomerDTO customerDTO)
         {
@@ -109,19 +153,6 @@ namespace WebApp.Controllers
                 ViewBag.Message = "Value error!";
                 return View();
             }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> UpdateCustomer(string id)
-        {
-            if (id == "")
-            {
-                return NotFound();
-            }
-            CustomerDTO customerDTO = new CustomerDTO();
-            List<CustomerDTO> listCustomerDTO = await _customerService.GetCustomers();
-            customerDTO = listCustomerDTO.Find(cus => cus.Id == id);
-            return View(customerDTO);
         }
 
         [HttpPost]
